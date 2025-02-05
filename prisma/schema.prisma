@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // Unique identifier for the product, auto-generated using PostgreSQL's gen_random_uuid() function.
+
+  name String
+  slug String @unique(map: "product_slug_idx")
+  // A unique, URL-friendly identifier for the product (e.g., "cool-product-name").
+  // The @unique constraint ensures that no two products have the same slug.
+
+  category    String
+  images      String[] // brackets indicate an array of strings
+  brand       String
+  description String
+  stock       Int
+  price       Decimal  @default(0) @db.Decimal(12, 2)
+  // The price of the product, with up to 12 total digits and 2 decimal places.
+
+  rating Decimal @default(0) @db.Decimal(3, 2)
+  // Can store values like 4.25, 3.00, etc., with 3 total digits and 2 decimal places.
+
+  numReviews Int     @default(0)
+  isFeatured Boolean @default(false)
+  // Indicates whether the product is featured on the homepage or in a special section.
+  // Default value is false.
+
+  banner String?
+  //? indicates that the field is optional
+
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  // `Timestamp(6)` means it supports microsecond precision.
+}
