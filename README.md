@@ -58,3 +58,6 @@ Type Safety: It works seamlessly with TypeScript, ensuring type correctness.
 Runtime Validation: Unlike TypeScript (which only checks types at compile-time), Zod validates data at runtime.
 Composability: You can combine and extend schemas easily.
 Error Handling: Provides detailed validation errors.
+
+created validator.ts in /lib to create scheme for inserting products
+We can then use zod to infer that schema into /types/index.ts
