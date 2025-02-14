@@ -5,14 +5,14 @@ import { signIn, signOut } from "@/auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 // Sign in the user with credentials
-export async function signInWithCredentials({
+export async function signInWithCredentials(
   prevState: unknown,
-  formData: FormData, //This function expects a FormData object containing user input from a sign-in form.
-}) {
+  formData: FormData
+) {
   try {
     const user = signInFormSchema.parse({
-      email: FormData.get("email"),
-      password: FormData.get("password"),
+      email: formData.get("email"),
+      password: formData.get("password"),
     });
 
     await signIn("credentials", user);
