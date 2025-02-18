@@ -5,6 +5,7 @@ import { signIn, signOut } from "@/auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { hashSync } from "bcrypt-ts-edge";
 import { prisma } from "@/db/prisma";
+import { formatError } from "../utils";
 
 // Sign in the user with credentials
 export async function signInWithCredentials(
@@ -36,6 +37,7 @@ export async function signOutUser() {
 //register user
 export async function signUpUser(prevState: unknown, formData: FormData) {
   try {
+    // Validate form data
     const user = signUpFormSchema.parse({
       name: formData.get("name"),
       email: formData.get("email"),
@@ -43,8 +45,20 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
       confirmPassword: formData.get("confirmPassword"),
     });
 
-    const plainPassword = user.password;
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: user.email },
+    });
 
+    if (existingUser) {
+      return {
+        success: false,
+        message: "Email is already in use",
+        errors: { email: "This email is already registered." },
+      };
+    }
+
+    // Hash password and create user
     user.password = hashSync(user.password, 10);
 
     await prisma.user.create({
@@ -55,16 +69,30 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
       },
     });
 
-    await signIn("credentials", {
-      email: user.email,
-      password: plainPassword,
-    });
-
     return { success: true, message: "User registered successfully" };
   } catch (error) {
     if (isRedirectError(error)) {
       throw error;
     }
-    return { success: false, message: "Invalid email or password" };
+
+    // Handle validation errors (Zod)
+    if (error.name === "ZodError") {
+      const errors: Record<string, string> = {};
+      error.errors.forEach((err: any) => {
+        errors[err.path[0]] = err.message;
+      });
+
+      return {
+        success: false,
+        message: "Validation failed",
+        errors,
+      };
+    }
+
+    return {
+      success: false,
+      message: "Sign-up failed. Please try again.",
+      errors: {},
+    };
   }
 }

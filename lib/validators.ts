@@ -38,5 +38,5 @@ export const signUpFormSchema = z
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
-    path: ["confirmPassword"],
+    path: ["confirmPassword"], //identify which field to display in
   });
