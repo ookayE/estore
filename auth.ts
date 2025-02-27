@@ -53,7 +53,7 @@ export const config = {
     }),
   ],
   callbacks: {
-    async session({ session, token }: any) {
+    async session({ session, user, trigger, token }: any) {
       // Ensure session contains user details
       session.user = {
         id: token.id,
@@ -61,8 +61,32 @@ export const config = {
         email: token.email,
         role: token.role,
       };
+      session.user.role = token.role;
+      session.user.name = token.name;
 
       return session;
+    },
+    async jwt({ token, user, trigger, session }: any) {
+      //assign user fields to the token
+      if (user) {
+        token.role = user.role;
+
+        // if user has no name, then use email
+        if (user.name === "NO_NAME") {
+          token.name = user.email ? user.email.split("@")[0] : "defaultName";
+
+          //update database to reflect token name
+          try {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { name: token.name },
+            });
+          } catch (error) {
+            console.error("Failed to update user name:", error);
+          }
+        }
+      }
+      return token;
     },
   },
 } satisfies NextAuthConfig;
